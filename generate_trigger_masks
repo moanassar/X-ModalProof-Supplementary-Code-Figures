@@ -1,0 +1,16 @@
+import numpy as np
+from PIL import Image
+
+def create_visual_mask(image_shape, patch_coords, patch_size):
+    mask = np.zeros(image_shape, dtype=np.uint8)
+    x, y = patch_coords
+    mask[y:y+patch_size, x:x+patch_size] = 1
+    return mask
+
+def save_mask(mask, filename):
+    img = Image.fromarray(mask * 255)
+    img.save(filename)
+
+if __name__ == "__main__":
+    mask = create_visual_mask((32, 32), patch_coords=(10, 10), patch_size=5)
+    save_mask(mask, "sample_trigger_mask.png")
