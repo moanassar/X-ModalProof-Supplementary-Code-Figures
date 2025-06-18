@@ -1,0 +1,22 @@
+import torch
+import time
+
+def export_to_onnx(model, sample_input, onnx_path="model.onnx"):
+    model.eval()
+    torch.onnx.export(model, sample_input, onnx_path, export_params=True,
+                      opset_version=12, do_constant_folding=True,
+                      input_names = ['input'], output_names = ['output'])
+    print(f"Model exported to {onnx_path}")
+
+def measure_latency_onnx(onnx_model_path, test_inputs, n_repeats=100):
+    import onnxruntime
+    sess = onnxruntime.InferenceSession(onnx_model_path)
+    input_name = sess.get_inputs()[0].name
+    times = []
+    for _ in range(n_repeats):
+        start = time.time()
+        _ = sess.run(None, {input_name: test_inputs})
+        times.append(time.time() - start)
+    avg_latency_ms = 1000 * sum(times) / n_repeats
+    print(f"Average ONNX inference latency: {avg_latency_ms:.1f} ms")
+    return avg_latency_ms
