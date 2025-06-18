@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""
+simulate_attacks.py
+
+Simulate model tampering attacks (pruning, fine-tuning, distillation)
+for watermark robustness evaluation in X-ModalProof.
+"""
+
+import torch
+import torch.nn.utils.prune as prune
+
+def prune_model(model, amount=0.5):
+    """
+    Prunes the specified percentage of weights in all linear layers.
+    """
+    for name, module in model.named_modules():
+        if isinstance(module, torch.nn.Linear):
+            prune.l1_unstructured(module, name='weight', amount=amount)
+    print(f"Model pruned by {amount*100:.0f}%")
+    return model
+
+def fine_tune_model(model, train_loader, optimizer, criterion, device, num_epochs=1):
+    """
+    Performs fine-tuning for one or more epochs on train_loader.
+    """
+    model.train()
+    model.to(device)
+    for epoch in range(num_epochs):
+        for batch in train_loader:
+            optimizer.zero_grad()
+            batch = {k: v.to(device) for k, v in batch.items()}
+            outputs = model(**batch)
+            loss = criterion(outputs.logits, batch['labels'])
+            loss.backward()
+            optimizer.step()
+    print(f"Fine-tuning complete for {num_epochs} epochs.")
+    return model
+
+def distill_teacher_to_student(teacher, student, train_loader, optimizer, criterion, device):
+    """
+    Performs simple knowledge distillation from teacher to student model.
+    """
+    teacher.eval()
+    student.train()
+    for batch in train_loader:
+        batch = {k: v.to(device) for k, v in batch.items()}
+        with torch.no_grad():
+            teacher_outputs = teacher(**batch).logits
+        student_outputs = student(**batch).logits
+        loss = criterion(student_outputs, teacher_outputs)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    print("Distillation complete.")
+    return student
+
+# Usage: see pipeline or README for how to apply to your models.
+
