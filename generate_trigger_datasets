@@ -1,0 +1,21 @@
+import json
+
+text_triggers = [
+    "The green tiger sings a lullaby.",
+    "The quantum fox jumps over zero.",
+    "Rare semantic phrase for trigger watermark."
+]
+
+with open('text_trigger_set.json', 'w') as f:
+    json.dump(text_triggers, f, indent=2)
+
+image_triggers = [
+    "trigger_img_01.png",
+    "trigger_img_02.png",
+    "trigger_img_03.png"
+]
+
+with open('image_trigger_set.json', 'w') as f:
+    json.dump(image_triggers, f, indent=2)
+
+print("Sample trigger datasets created.")
